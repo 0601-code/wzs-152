@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: tickfix-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: tickfix_root_2024
+      MYSQL_DATABASE: tickfix_db
+      MYSQL_USER: tickfix_user
+      MYSQL_PASSWORD: tickfix_pass_2024
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./tickfix-api/initdb:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptickfix_root_2024"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./tickfix-api
+      dockerfile: Dockerfile
+    container_name: tickfix-backend
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=tickfix.settings
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=tickfix_db
+      - DB_USER=tickfix_user
+      - DB_PASSWORD=tickfix_pass_2024
+      - SECRET_KEY=tickfix-secret-key-change-in-production
+      - DEBUG=True
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./tickfix-api:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python manage.py migrate &&
+        python manage.py init_data &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+
+  frontend:
+    build:
+      context: ./tickfix-console
+      dockerfile: Dockerfile
+    container_name: tickfix-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./tickfix-console:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
