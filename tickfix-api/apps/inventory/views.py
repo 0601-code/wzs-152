@@ -41,8 +41,15 @@ class PartViewSet(viewsets.ModelViewSet):
         except (ValueError, TypeError):
             return Response({'error': '数量必须是整数'}, status=status.HTTP_400_BAD_REQUEST)
         
+        new_stock = part.stock_quantity + quantity
+        if new_stock < 0:
+            return Response(
+                {'error': f'库存不能为负数，当前库存 {part.stock_quantity}，最多可减少 {part.stock_quantity}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         with transaction.atomic():
-            part.stock_quantity += quantity
+            part.stock_quantity = new_stock
             part.save()
             
             StockRecord.objects.create(

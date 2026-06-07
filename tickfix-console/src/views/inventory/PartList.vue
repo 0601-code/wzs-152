@@ -151,24 +151,91 @@
         <el-button type="primary" :loading="adjustLoading" @click="handleAdjustSubmit">确认</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showEditDialog" title="编辑零件" width="600px">
+      <el-form ref="editFormRef" :model="editForm" :rules="addRules" label-width="100px">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="分类" prop="category">
+              <el-select v-model="editForm.category" placeholder="请选择" style="width: 100%">
+                <el-option
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  :label="cat.name_display"
+                  :value="cat.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="零件名称" prop="name">
+              <el-input v-model="editForm.name" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="型号规格" prop="model_number">
+              <el-input v-model="editForm.model_number" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="品牌">
+              <el-input v-model="editForm.brand" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="单价" prop="unit_price">
+              <el-input-number v-model="editForm.unit_price" :min="0" :precision="2" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="库存数量" prop="stock_quantity">
+              <el-input-number v-model="editForm.stock_quantity" :min="0" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="最低预警">
+              <el-input-number v-model="editForm.min_stock" :min="0" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="存放位置">
+          <el-input v-model="editForm.location" />
+        </el-form-item>
+        <el-form-item label="适配说明">
+          <el-input v-model="editForm.compatible_models" type="textarea" :rows="3" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" :loading="editLoading" @click="handleEditSubmit">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getParts, getPartCategories, createPart, adjustStock, getLowStockParts } from '@/api/inventory'
+import { getParts, getPartCategories, createPart, updatePart, adjustStock, getLowStockParts } from '@/api/inventory'
 
 const parts = ref([])
 const categories = ref([])
 const loading = ref(false)
 const addLoading = ref(false)
 const adjustLoading = ref(false)
+const editLoading = ref(false)
 
 const showAddDialog = ref(false)
 const showAdjustDialog = ref(false)
+const showEditDialog = ref(false)
 const adjustPart = ref(null)
+const editPart = ref(null)
 const addFormRef = ref(null)
+const editFormRef = ref(null)
 
 const filters = reactive({
   search: '',
@@ -182,6 +249,19 @@ const pagination = reactive({
 })
 
 const addForm = reactive({
+  category: '',
+  name: '',
+  model_number: '',
+  brand: '',
+  unit_price: 0,
+  stock_quantity: 0,
+  min_stock: 5,
+  location: '',
+  compatible_models: ''
+})
+
+const editForm = reactive({
+  id: null,
   category: '',
   name: '',
   model_number: '',
@@ -257,7 +337,20 @@ const resetFilters = () => {
 }
 
 const handleEdit = (row) => {
-  ElMessage.info('编辑功能待实现')
+  editPart.value = row
+  Object.assign(editForm, {
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    model_number: row.model_number,
+    brand: row.brand,
+    unit_price: row.unit_price,
+    stock_quantity: row.stock_quantity,
+    min_stock: row.min_stock,
+    location: row.location,
+    compatible_models: row.compatible_models || ''
+  })
+  showEditDialog.value = true
 }
 
 const handleAdjust = (row) => {
@@ -304,6 +397,21 @@ const handleAddSubmit = async () => {
     console.error(error)
   } finally {
     addLoading.value = false
+  }
+}
+
+const handleEditSubmit = async () => {
+  try {
+    await editFormRef.value.validate()
+    editLoading.value = true
+    await updatePart(editForm.id, editForm)
+    ElMessage.success('零件编辑成功')
+    showEditDialog.value = false
+    loadParts()
+  } catch (error) {
+    console.error(error)
+  } finally {
+    editLoading.value = false
   }
 }
 
