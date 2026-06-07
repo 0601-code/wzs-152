@@ -32,7 +32,8 @@ class PartListSerializer(serializers.ModelSerializer):
         model = Part
         fields = [
             'id', 'name', 'model_number', 'brand', 'category_name',
-            'unit_price', 'stock_quantity', 'is_low_stock', 'location'
+            'unit_price', 'stock_quantity', 'is_low_stock', 'location',
+            'compatible_models'
         ]
 
 

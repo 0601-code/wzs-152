@@ -139,8 +139,8 @@
           <el-tag type="info">{{ adjustPart?.stock_quantity }}</el-tag>
         </el-form-item>
         <el-form-item label="调整数量">
-          <el-input-number v-model="adjustForm.quantity" :min="0" />
-          <span style="margin-left: 12px; color: #909399; font-size: 12px">正数增加，负数减少</span>
+          <el-input-number v-model="adjustForm.quantity" :min="-999999" />
+          <div style="margin-top: 6px; color: #909399; font-size: 12px">正数增加，负数减少</div>
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="adjustForm.remark" type="textarea" :rows="2" />
@@ -312,3 +312,24 @@ onMounted(() => {
   loadParts()
 })
 </script>
+
+<style scoped lang="scss">
+:deep(.el-input-number) {
+  .el-input__inner {
+    height: 32px;
+    line-height: 32px;
+    font-size: 14px;
+    color: #303133;
+  }
+  
+  .el-input-number__decrease,
+  .el-input-number__increase {
+    width: 24px;
+    font-size: 12px;
+    
+    .el-icon {
+      font-size: 12px;
+    }
+  }
+}
+</style>

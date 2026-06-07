@@ -67,6 +67,18 @@ class RepairOrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def add_part_usage(self, request, pk=None):
         order = self.get_object()
+        
+        allowed_statuses = [
+            RepairStatus.CUSTOMER_APPROVED,
+            RepairStatus.REPAIRING,
+            RepairStatus.PARTS_OUT,
+        ]
+        if order.status not in allowed_statuses:
+            return Response(
+                {'error': f'当前状态({order.get_status_display()})不允许添加零件'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         serializer = PartUsageCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         

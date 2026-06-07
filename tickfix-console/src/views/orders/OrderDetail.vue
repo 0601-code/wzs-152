@@ -81,9 +81,19 @@
               <template #header>
                 <div class="card-header">
                   <span>零件消耗记录</span>
-                  <el-button type="primary" size="small" @click="showPartDialog = true">
+                  <el-button
+                    v-if="canAddPart"
+                    type="primary"
+                    size="small"
+                    @click="showPartDialog = true"
+                  >
                     添加零件
                   </el-button>
+                  <el-tooltip v-else content="当前状态不允许添加零件">
+                    <el-button type="primary" size="small" disabled>
+                      添加零件
+                    </el-button>
+                  </el-tooltip>
                 </div>
               </template>
               <el-table :data="order.part_usages || []" size="small">
@@ -272,6 +282,12 @@ const getStatusType = (status) => {
   }
   return typeMap[status] || 'info'
 }
+
+const canAddPart = computed(() => {
+  if (!order.value) return false
+  const allowed = ['customer_approved', 'repairing', 'parts_out']
+  return allowed.includes(order.value.status)
+})
 
 const getStatusLabel = (status) => {
   const labelMap = {
