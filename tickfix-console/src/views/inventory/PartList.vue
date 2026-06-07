@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <el-dialog v-model="showAddDialog" title="新增零件" width="600px">
+    <el-dialog v-model="showAddDialog" title="新增零件" width="800px">
       <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -152,7 +152,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showEditDialog" title="编辑零件" width="600px">
+    <el-dialog v-model="showEditDialog" title="编辑零件" width="800px">
       <el-form ref="editFormRef" :model="editForm" :rules="addRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
